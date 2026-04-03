@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таблица углеводов в продуктах</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-box button {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-box button:hover {
+            background: #5568d3;
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sort-controls select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+        }
+
+        .sort-controls select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 1.1em;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f0f0f0;
+            border-bottom: 3px solid #667eea;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e0e0e0;
+            transition: background 0.3s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        td {
+            padding: 15px;
+            color: #555;
+        }
+
+        .carbs-value {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .carbs-low {
+            color: #28a745;
+        }
+
+        .carbs-medium {
+            color: #ffc107;
+        }
+
+        .carbs-high {
+            color: #dc3545;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .pagination button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-item label {
+            display: block;
+            font-size: 0.9em;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .stat-item .value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .controls {
+                padding: 20px;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .search-box input {
+                min-width: unset;
+            }
+
+            .sort-controls {
+                flex-direction: column;
+            }
+
+            .sort-controls select {
+                width: 100%;
+            }
+
+            table {
+                font-size: 0.9em;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Таблица углеводов</h1>
+            <p>Найдите информацию о содержании углеводов в продуктах</p>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Введите название продукта (например: яблоко, мясо, хлеб)..."
+                    autocomplete="off"
+                >
+                <button onclick="search()">Поиск</button>
+            </div>
+
+            <div class="sort-controls">
+                <select id="sortBy" onchange="sortProducts()">
+                    <option value="carbs_value">Сортировать по углеводам</option>
+                    <option value="product">По названию (A-Z)</option>
+                </select>
+                <select id="sortOrder" onchange="sortProducts()">
+                    <option value="desc">По убыванию</option>
+                    <option value="asc">По возрастанию</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="stats" id="stats">
+                <div class="stat-item">
+                    <label>Всего продуктов</label>
+                    <div class="value" id="totalProducts">-</div>
+                </div>
+                <div class="stat-item">
+                    <label>Показано</label>
+                    <div class="value" id="shownProducts">-</div>
+                </div>
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">
+                ⏳ Загрузка данных...
+            </div>
+
+            <div id="noResults" class="no-results" style="display: none;">
+                😕 Продукты не найдены. Попробуйте другой поиск.
+            </div>
+
+            <div class="table-wrapper" id="tableWrapper" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Название продукта</th>
+                            <th>Углеводы (г/100г)</th>
+                            <th>Уровень</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let currentMode = 'all'; // 'all', 'search', 'sort'
+        let searchQuery = '';
+
+        // Загрузить данные при загрузке страницы
+        window.addEventListener('load', () => {
+            loadAll();
+        });
+
+        // Enter в поиске
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                search();
+            }
+        });
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('tableWrapper').style.display = 'none';
+            document.getElementById('noResults').style.display = 'none';
+            document.getElementById('pagination').innerHTML = '';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function displayTable(data, total) {
+            hideLoading();
+
+            if (!data || data.length === 0) {
+                document.getElementById('noResults').style.display = 'block';
+                document.getElementById('tableWrapper').style.display = 'none';
+                document.getElementById('pagination').innerHTML = '';
+                document.getElementById('totalProducts').textContent = total;
+                document.getElementById('shownProducts').textContent = '0';
+                return;
+            }
+
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                const carbsValue = parseFloat(item.carbs_value);
+                let level = '';
+                let levelClass = '';
+
+                if (carbsValue < 5) {
+                    level = '🟢 Низкие';
+                    levelClass = 'carbs-low';
+                } else if (carbsValue < 20) {
+                    level = '🟡 Средние';
+                    levelClass = 'carbs-medium';
+                } else {
+                    level = '🔴 Высокие';
+                    levelClass = 'carbs-high';
+                }
+
+                row.innerHTML = `
+                    <td>${index + 1 + (currentPage - 1) * 50}</td>
+                    <td>${item.product}</td>
+                    <td class="carbs-value">${carbsValue} г</td>
+                    <td class="${levelClass}">${level}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('tableWrapper').style.display = 'block';
+            document.getElementById('noResults').style.display = 'none';
+            document.getElementById('totalProducts').textContent = total;
+            document.getElementById('shownProducts').textContent = data.length;
+        }
+
+        function search() {
+            showLoading();
+            currentMode = 'search';
+            searchQuery = document.getElementById('searchInput').value.trim();
+            currentPage = 1;
+
+            if (!searchQuery) {
+                loadAll();
+                return;
+            }
+
+            fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`)
+                .then(r => r.json())
+                .then(data => {
+                    displayTable(data.data, data.count);
+                    document.getElementById('pagination').innerHTML = '';
+                })
+                .catch(e => {
+                    console.error('Error:', e);
+                    document.getElementById('noResults').style.display = 'block';
+                    hideLoading();
+                });
+        }
+
+        function loadAll() {
+            showLoading();
+            currentMode = 'all';
+            document.getElementById('searchInput').value = '';
+
+            fetch(`/api/all?page=${currentPage}`)
+                .then(r => r.json())
+                .then(data => {
+                    displayTable(data.data, data.total);
+                    renderPagination(data.total_pages, data.page);
+                })
+                .catch(e => {
+                    console.error('Error:', e);
+                    document.getElementById('noResults').style.display = 'block';
+                    hideLoading();
+                });
+        }
+
+        function sortProducts() {
+            showLoading();
+            currentMode = 'sort';
+            currentPage = 1;
+
+            const sortBy = document.getElementById('sortBy').value;
+            const order = document.getElementById('sortOrder').value;
+
+            fetch(`/api/sort?sort_by=${sortBy}&order=${order}`)
+                .then(r => r.json())
+                .then(data => {
+                    displayTable(data.data, data.count);
+                    document.getElementById('pagination').innerHTML = '';
+                })
+                .catch(e => {
+                    console.error('Error:', e);
+                    document.getElementById('noResults').style.display = 'block';
+                    hideLoading();
+                });
+        }
+
+        function renderPagination(totalPages, currentPageNum) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            const prev = document.createElement('button');
+            prev.textContent = '← Предыдущая';
+            prev.disabled = currentPageNum === 1;
+            prev.onclick = () => {
+                currentPage--;
+                loadAll();
+            };
+            pagination.appendChild(prev);
+
+            const maxDisplay = 5;
+            const startPage = Math.max(1, currentPageNum - Math.floor(maxDisplay / 2));
+            const endPage = Math.min(totalPages, startPage + maxDisplay - 1);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = i === currentPageNum ? 'active' : '';
+                btn.onclick = () => {
+                    currentPage = i;
+                    loadAll();
+                };
+                pagination.appendChild(btn);
+            }
+
+            const next = document.createElement('button');
+            next.textContent = 'Следующая →';
+            next.disabled = currentPageNum === totalPages;
+            next.onclick = () => {
+                currentPage++;
+                loadAll();
+            };
+            pagination.appendChild(next);
+        }
+    </script>
+</body>
+</html>

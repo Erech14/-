@@ -39,7 +39,9 @@
 100% AI:
 - /main/app/main.py
 - /main/app/template/index.html
+
 50% AI:
 - /main/README.md
+
 0% AI:
 - /main/app/foods.csv
